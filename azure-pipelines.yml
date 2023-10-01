@@ -18,12 +18,12 @@ steps:
   displayName: Login to ACR
   inputs:
     command: login
-    containerRegistry: 
+    containerRegistry: aksdemoacrbisio
 - task: Docker@2
   displayName: Build an image
   inputs:
     Dockerfile: src/Services/Payment/Payment.API/Dockerfile
     repository: $(imageName)
     buildContext: src
-    command: build
+    command: buildAndPush
     
