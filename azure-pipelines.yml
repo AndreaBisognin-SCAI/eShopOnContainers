@@ -11,8 +11,14 @@ pool:
 
 variables: 
   imageName: eshop/payment.api
+  tag: linux-latest
 
 steps:
+- task: Docker@2
+  displayName: Login to ACR
+  inputs:
+    command: login
+    containerRegistry: 
 - task: Docker@2
   displayName: Build an image
   inputs:
