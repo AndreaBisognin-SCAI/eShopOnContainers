@@ -25,7 +25,7 @@ variables:
 stages:
 
  - ${{ each module in parameters.modules }}:
-    - template: pipeline/stages/stage2.yml
+    - template: build-and-push.yaml
       parameters:
         module: ${{ module }}
 

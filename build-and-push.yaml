@@ -1,0 +1,25 @@
+parameters:
+  - name: module
+    displayName: "module"
+    type: object
+
+stages:
+  - stage: 
+    displayName:  ${{ parameters.module.imageName }}
+    jobs:
+      - job:
+        steps:
+        - task: Docker@2
+          displayName: Login to ACR
+          inputs:
+            command: login
+            containerRegistry: aksdemoacrbisio
+
+
+        - task: Docker@2
+          displayName: Build and Push
+          inputs:
+            Dockerfile: ${{ parameters.module.dockerFile}}
+            repository: ${{ parameters.module.imageName }}
+            buildContext: src
+            command: buildAndPush
