@@ -35,7 +35,7 @@ function Install-Chart  {
     if ($chart -ne "eshop-common" -or $customRegistry)  {       # eshop-common is ignored when no secret must be deployed        
         $command = "install $appName-$chart $options $chart"
         Write-Host "Helm Command: helm $command" -ForegroundColor Gray
-        Invoke-Expression 'cmd /c "helm $command"'
+        Invoke-Expression '"helm $command"'
     }
 }
 

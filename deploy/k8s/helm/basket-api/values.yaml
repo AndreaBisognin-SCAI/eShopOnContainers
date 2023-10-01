@@ -26,9 +26,9 @@ env:
   urls:
   # configmap declares variables which value is taken from the config map defined in template configmap.yaml (name is name of var and key the key in configmap).
   configmap:
-    - name: ConnectionString
+    - name: ConnectionStrings__Redis
       key: basket__ConnectionString
-    - name: EventBusConnection
+    - name: ConnectionStrings__EventBus
       key: all__EventBusConnection
     - name: ApplicationInsights__InstrumentationKey
       key: all__InstrumentationKey
@@ -43,7 +43,12 @@ env:
     - name: PORT
       value: "80"
     - name: GRPC_PORT
-      value: "81"      
+      value: "81"
+    - name: Kestrel__Endpoints__Http__Url
+      value: "http://0.0.0.0:80"
+    - name: Kestrel__Endpoints__gRPC__Url
+      value: "http://0.0.0.0:81"
+      
 probes:
   liveness:
     path: /liveness

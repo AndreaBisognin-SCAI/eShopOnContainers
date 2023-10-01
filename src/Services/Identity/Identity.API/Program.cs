@@ -34,6 +34,7 @@ builder.Services.AddHealthChecks()
             name: "IdentityDB-check",
             tags: new string[] { "IdentityDB" });
 
+Console.WriteLine("XXX: " + builder.Configuration.GetRequiredConnectionString("IdentityDB"));
 builder.Services.AddTransient<IProfileService, ProfileService>();
 builder.Services.AddTransient<ILoginService<ApplicationUser>, EFLoginService>();
 builder.Services.AddTransient<IRedirectService, RedirectService>();

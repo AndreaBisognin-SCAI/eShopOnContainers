@@ -394,6 +394,7 @@ public static class CommonExtensions
             {
                 var logger = sp.GetRequiredService<ILogger<DefaultRabbitMQPersistentConnection>>();
 
+                Console.WriteLine("XXX:" + configuration.GetRequiredConnectionString("EventBus"));
                 var factory = new ConnectionFactory()
                 {
                     HostName = configuration.GetRequiredConnectionString("EventBus"),

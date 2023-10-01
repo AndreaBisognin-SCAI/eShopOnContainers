@@ -138,10 +138,10 @@ export TAG=$image_tag
 
 if [[ $build_images ]]; then
   echo "#################### Building the $app_name Docker images ####################"
-  docker-compose -p ../.. -f ../../docker-compose.yml build
+  docker-compose -p ../.. -f ../../../src/docker-compose.yml build
 
   # Remove temporary images
-  docker rmi $(docker images -qf "dangling=true") 
+  # docker rmi $(docker images -qf "dangling=true")  # CAN FAIL IF DANGLING IMAGES ARE USED BY STOPPED CONTAINERS 
 fi
 
 use_custom_registry=''
@@ -149,11 +149,11 @@ use_custom_registry=''
 if [[ -n $container_registry ]]; then 
   echo "################ Log into custom registry $container_registry ##################"
   use_custom_registry='yes'
-  if [[ -z $docker_username ]] || [[ -z $docker_password ]]; then
-    echo "Error: Must use -u (--docker-username) AND -p (--docker-password) if specifying custom registry"
-    exit 1
-  fi
-  docker login -u $docker_username -p $docker_password $container_registry
+  # if [[ -z $docker_username ]] || [[ -z $docker_password ]]; then
+  #   echo "Error: Must use -u (--docker-username) AND -p (--docker-password) if specifying custom registry"
+  #   exit 1
+  # fi
+  # docker login -u $docker_username -p $docker_password $container_registry
 fi
 
 if [[ $push_images ]]; then
@@ -167,8 +167,8 @@ if [[ $push_images ]]; then
   for service in "${services[@]}"
   do
     echo "Pushing image for service $service..."
-    docker tag "eshop/$service:$image_tag" "$container_registry/$service:$image_tag"
-    docker push "$container_registry/$service:$image_tag"
+    docker tag "eshop/$service:$image_tag" "$container_registry/eshop/$service:$image_tag"
+    docker push "$container_registry/eshop/$service:$image_tag"
   done
 fi
 
@@ -176,7 +176,8 @@ ingress_values_file="ingress_values.yaml"
 
 if [[ $use_local_k8s ]]; then
   ingress_values_file="ingress_values_dockerk8s.yaml"
-  dns="localhost"
+  dns="eshop.demo"
+  #dns="localhost"
 fi
 
 if [[ $dns == "aks" ]]; then
@@ -232,17 +233,31 @@ if [[ !$skip_infrastructure ]]; then
   for infra in "${infras[@]}"
   do
     echo "Installing infrastructure: $infra"
-    helm install "$app_name-$infra" --namespace $namespace --set "ingress.hosts={$dns}" --values app.yaml --values inf.yaml --values $ingress_values_file --values $ingressMeshAnnotationsFile --set app.name=$app_name --set inf.k8s.dns=$dns $infra --set inf.mesh.enabled=$use_mesh     
+    echo ">Running: helm install "$app_name-$infra" --namespace $namespace --set "ingress.hosts={$dns}" --values app.yaml --values inf.yaml --values $ingress_values_file --values $ingressMeshAnnotationsFile --set app.name=$app_name --set inf.k8s.dns=$dns $infra --set inf.mesh.enabled=$use_mesh > /dev/null"
+    helm install "$app_name-$infra" --namespace $namespace --set "ingress.hosts={$dns}" --values app.yaml --values inf.yaml --values $ingress_values_file --values $ingressMeshAnnotationsFile --set app.name=$app_name --set inf.k8s.dns=$dns $infra --set inf.mesh.enabled=$use_mesh  > /dev/null
   done  
 fi
+
+# foo=(eshop-common)
+# for chart in "${foo[0]}"
+# do
+#   echo "> Running: helm install "$app_name-$chart" --namespace $namespace --set "ingress.hosts={$dns}" --set inf.registry.server=$container_registry  --values app.yaml --values inf.yaml --values $ingress_values_file --values $ingressMeshAnnotationsFile  --set app.name=$app_name --set inf.k8s.dns=$dns --set image.tag=$image_tag --set image.pullPolicy=$imagePullPolicy $chart --set inf.mesh.enabled=$use_mesh > /dev/null"
+#   echo "----------------"
+#   helm install "$app_name-$chart" --namespace $namespace --set "ingress.hosts={$dns}" --set inf.registry.server=$container_registry  --values app.yaml --values inf.yaml --values $ingress_values_file --values $ingressMeshAnnotationsFile  --set app.name=$app_name --set inf.k8s.dns=$dns --set image.tag=$image_tag --set image.pullPolicy=$imagePullPolicy $chart --set inf.mesh.enabled=$use_mesh > /dev/null
+# done
+
+#exit 0
 
 for chart in "${charts[@]}"
 do
     echo "Installing: $chart"
     if [[ $use_custom_registry ]]; then       
-      helm install "$app_name-$chart" --namespace $namespace --set "ingress.hosts={$dns}" --set inf.registry.server=$container_registry --set inf.registry.login=$docker_username --set inf.registry.pwd=$docker_password --set inf.registry.secretName=eshop-docker-scret --values app.yaml --values inf.yaml --values $ingress_values_file --values $ingressMeshAnnotationsFile  --set app.name=$app_name --set inf.k8s.dns=$dns --set image.tag=$image_tag --set image.pullPolicy=$imagePullPolicy $chart --set inf.mesh.enabled=$use_mesh
+      echo "> Running:   helm install "$app_name-$chart" --namespace $namespace --set "ingress.hosts={$dns}" --set inf.registry.server=$container_registry  --values app.yaml --values inf.yaml --values $ingress_values_file --values $ingressMeshAnnotationsFile  --set app.name=$app_name --set inf.k8s.dns=$dns --set image.tag=$image_tag --set image.pullPolicy=$imagePullPolicy $chart --set inf.mesh.enabled=$use_mesh > /dev/null"
+      echo "------------------------------------------------------------"
+        helm install "$app_name-$chart" --namespace $namespace --set "ingress.hosts={$dns}" --set inf.registry.server=$container_registry  --values app.yaml --values inf.yaml --values $ingress_values_file --values $ingressMeshAnnotationsFile  --set app.name=$app_name --set inf.k8s.dns=$dns --set image.tag=$image_tag --set image.pullPolicy=$imagePullPolicy $chart --set inf.mesh.enabled=$use_mesh > /dev/null
     elif [[ $chart != "eshop-common" ]]; then  # eshop-common is ignored when no secret must be deployed      
-      helm install "$app_name-$chart" --namespace $namespace --set "ingress.hosts={$dns}" --values app.yaml --values inf.yaml --values $ingress_values_file --values $ingressMeshAnnotationsFile --set app.name=$app_name --set inf.k8s.dns=$dns --set image.tag=$image_tag --set image.pullPolicy=$imagePullPolicy $chart --set inf.mesh.enabled=$use_mesh
+      echo ">Running: helm install "$app_name-$chart" --namespace $namespace --set "ingress.hosts={$dns}" --values app.yaml --values inf.yaml --values $ingress_values_file --values $ingressMeshAnnotationsFile --set app.name=$app_name --set inf.k8s.dns=$dns --set image.tag=$image_tag --set image.pullPolicy=$imagePullPolicy $chart --set inf.mesh.enabled=$use_mesh"
+      helm install "$app_name-$chart" --namespace $namespace --set "ingress.hosts={$dns}" --values app.yaml --values inf.yaml --values $ingress_values_file --values $ingressMeshAnnotationsFile --set app.name=$app_name --set inf.k8s.dns=$dns --set image.tag=$image_tag --set image.pullPolicy=$imagePullPolicy $chart --set inf.mesh.enabled=$use_mesh > /dev/null 2>&1
     fi
 done
 

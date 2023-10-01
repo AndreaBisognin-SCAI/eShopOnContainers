@@ -283,3 +283,6 @@ src/**/inf.yaml
 
 .angular/
 /src/Services/Identity/Identity.API/keys/*.json
+
+#Secrets
+**/vars.sh
