@@ -3,6 +3,15 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
+parameters:
+  - name: modules
+    type: object
+    default:
+     - imageName: eshop/payment.api
+       dockerFile: src/Services/Payment/Payment.API/Dockerfile
+     - imageName:  eshop/catalog.api
+       dockerFile: src/Services/Catalog/Catalog.API/Dockerfile
+
 trigger:
 - dev
 
@@ -13,17 +22,33 @@ variables:
   imageName: eshop/payment.api
   tag: linux-latest
 
-steps:
-- task: Docker@2
-  displayName: Login to ACR
-  inputs:
-    command: login
-    containerRegistry: aksdemoacrbisio
-- task: Docker@2
-  displayName: Build and Push
-  inputs:
-    Dockerfile: src/Services/Payment/Payment.API/Dockerfile
-    repository: $(imageName)
-    buildContext: src
-    command: buildAndPush
+stages:
+
+ - ${{ each module in parameters.modules }}:
+    - template: pipeline/stages/stage2.yml
+      parameters:
+        module: ${{ module }}
+
+# steps:
+# - task: Docker@2
+#   displayName: Login to ACR
+#   inputs:
+#     command: login
+#     containerRegistry: aksdemoacrbisio
+
+# - ${{ each module in parameters.modules }}:
+
+#   - ${{ each appComponents in parameters.appComponents }}:   
+#     - template: pipeline/stages/stage2.yml
+#       parameters:
+#         appComponents: ${{ appComponents }}
+
+# - task: Docker@2
+#   displayName: Build and Push
+#   inputs:
+#     Dockerfile: src/Services/Payment/Payment.API/Dockerfile
+#     repository: $(imageName)
+#     buildContext: src
+#     command: buildAndPush
     
+  
